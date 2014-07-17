@@ -16,10 +16,6 @@
 
 package org.mbedsys.jvar;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 
 /**
  * 
@@ -29,12 +25,6 @@ import java.io.OutputStreamWriter;
 public class VariantByteArray extends Variant {
 	
 	protected byte[] data;
-
-	private byte lengthType = LENGTH_UNDEFINED;
-	
-	public static final byte LENGTH_NONE		= (byte)0x00;
-	public static final byte LENGTH_UNDEFINED	= (byte)0x01;
-	public static final byte LENGTH_DEF_8BIT	= (byte)0x02;
 
     protected static int toDigit(final char ch, final int index) {
         final int digit = Character.digit(ch, 16);
@@ -67,95 +57,19 @@ public class VariantByteArray extends Variant {
     }
 	
 	/**
-	 * Variable sized frame field constructor from a byte array
+	 * Byte array variant constructor from a value
 	 * 
 	 * @param data source byte array
 	 */
 	public VariantByteArray(byte[] data) {
 		this.data = data;
 	}
-	
-	/**
-	 * Variable sized frame field constructor from an input stream
-	 * 
-	 * @param input			source input stream
-	 * @param length		length
-	 * @param lengthType	length type
-	 */
-	public VariantByteArray(ByteArrayInputStream input, int length, byte lengthType) {
-		this.lengthType = lengthType;
-		data = new byte[length];
-		try {
-			input.read(data);
-		} catch (IOException e) {} // cannot fail
-	}
-	
-	/**
-	 * Variable sized frame field constructor from an input stream
-	 * 
-	 * @param input			source input stream
-	 * @param lengthType	length type
-	 */
-	public VariantByteArray(ByteArrayInputStream input, byte lengthType) {
-		this.lengthType = lengthType;
-		switch (lengthType) {
-		case LENGTH_NONE:
-			data = new byte[input.available()];
-			try {
-				input.read(data);
-			} catch (IOException e) {} // cannot fail
-			break;
-		case LENGTH_DEF_8BIT:
-			data = new byte[input.read()];
-			try {
-				input.read(data);
-			} catch (IOException e) {} // cannot fail
-			break;
-		default:
-		}
-	}
 
-	/**
-	 * Convert to a byte array
-	 * 
-	 * @return a byte[]
-	 */
 	@Override
 	public byte[] toByteArray() {
 		return data;
 	}
 
-	/**
-	 * Get the value as a Object
-	 * 
-	 * @return the value as a Object
-	 */
-	@Override
-	public Object toObject() {
-		return data;
-	}
-	
-	/**
-	 * Write data to an output stream
-	 * 
-	 * @param output output stream
-	 * @return number of written bytes
-	 */
-	@Override
-	public final void writeTo(ByteArrayOutputStream output) {
-		try {
-			if (lengthType == LENGTH_DEF_8BIT) {
-				output.write((byte)(data.length));
-			}
-			output.write(data);
-		} catch (IOException e) {} // cannot fail
-	}
-
-	/**
-	 * Return the human readable representation of the frame
-	 * 
-	 * @return a string
-	 */
 	@Override
 	public String toString() {
 		String dispFrame = "";
@@ -164,36 +78,24 @@ public class VariantByteArray extends Variant {
 		}
 		return dispFrame;
 	}
-	
-	/**
-	 * Write the value in JSON format
-	 * 
-	 * @param writer output stream writer
-	 * @throws IOException 
-	 */
-	@Override
-	public void writeJSONTo(OutputStreamWriter writer, int flags) throws IOException {
-		throw new UnsupportedOperationException("a byte array variant cannot be converted to JSON");
-	}
 
-	/**
-	 * Compare this field to an other field
-	 * 
-	 * @param other other field
-	 * @return the difference as an integer value
-	 */
 	@Override
 	public int compareTo(Object other) {
 		return data == ((VariantByteArray)other).data? 0 : -1;
 	}
 
-	/**
-	 * Get type
-	 * 
-	 * @return a Class
-	 */
 	@Override
 	public Type type() {
-		return Type.BYTE_ARRAY;
+		return Type.BYTEARRAY;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return data.length == 0;
+	}
+
+	@Override
+	public boolean isNull() {
+		return data == null;
 	}
 }

@@ -79,4 +79,9 @@ public abstract class VariantNumber extends Variant {
 	 * @return the variant as a String
 	 */
 	public abstract String toHexString();
+
+	@Override
+	public boolean isEmpty() {
+		return false;
+	}
 }

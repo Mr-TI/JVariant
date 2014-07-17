@@ -22,6 +22,28 @@ package org.mbedsys.jvar;
  * Copyright 2014 MbedSYS
  */
 public class KeyNotFoundException extends RuntimeException {
-    public KeyNotFoundException(String key) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public KeyNotFoundException() {
+		super();
+	}
+
+	public KeyNotFoundException(String message, Throwable cause,
+			boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
+
+	public KeyNotFoundException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public KeyNotFoundException(Throwable cause) {
+		super(cause);
+	}
+
+	public KeyNotFoundException(String key) {
     }
 }

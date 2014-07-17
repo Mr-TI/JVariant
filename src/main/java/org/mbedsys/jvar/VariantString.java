@@ -24,18 +24,10 @@ import java.io.OutputStreamWriter;
  * @author <a href="mailto:emericv@mbedsys.org">Emeric Verschuur</a>
  * Copyright 2014 MbedSYS
  */
-public class VariantString extends Variant implements Comparable<Object> {
-
-    public static final Variant EMPTY = new VariantString("");
+public class VariantString extends Variant {
 
     protected String data;
-
-    /**
-     * Default string variant constructor.
-     */
-    public VariantString() {
-    }
-
+    
     /**
      * Constructor from string value
      *

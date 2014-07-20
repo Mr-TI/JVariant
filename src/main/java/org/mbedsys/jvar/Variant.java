@@ -16,6 +16,11 @@
 
 package org.mbedsys.jvar;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -41,7 +46,9 @@ public abstract class Variant implements Comparable<Object> {
         STRING,
         UINT,
         ULONG
-	};
+	}
+
+	public static final Variant NULL = new VariantNull();
 
 	public static int FORMAT_JSON_COMPACT = 0x00000020;
 
@@ -281,4 +288,113 @@ public abstract class Variant implements Comparable<Object> {
 	 * @return the type as Type
 	 */
 	public abstract Type type();
+
+	/**
+	 * Write the value in JSON format
+	 * 
+	 * @param writer output stream writer
+	 * @throws IOException 
+	 */
+	private static void serializeJSONList(OutputStreamWriter writer, List<Variant> list, int flags) throws IOException {
+		boolean conpact = (flags & FORMAT_JSON_COMPACT) != 0;
+		int indentStep = flags & JSON_INDENT_MASK;
+		int indentOff = (flags >> 16) + indentStep;
+		flags = (flags & 0xFFFF) | (indentOff << 16);
+		Iterator<Variant> it = list.iterator();
+		writer.write('[');
+		if (it.hasNext()) {
+			if (indentOff != 0) {
+				writer.write('\n');
+				appendSpaces(writer, indentOff);
+			}
+			serializeJSONElt(writer, it.next(), flags);
+			while (it.hasNext()) {
+				writer.write(',');
+				if (indentOff != 0) {
+					writer.write('\n');
+					appendSpaces(writer, indentOff);
+				} else if (!conpact) {
+					writer.write(' ');
+				}
+				serializeJSONElt(writer, it.next(), flags);
+			}
+			if (indentOff != 0) {
+				writer.write('\n');
+				appendSpaces(writer, indentOff - indentStep);
+			}
+		}
+		writer.write(']');
+	}
+
+    /**
+	 * Write the value in JSON format
+	 * 
+	 * @param writer output stream writer
+	 * @throws IOException 
+	 */
+	public static void serializeJSONMap(OutputStreamWriter writer, Map<String, Variant> map, int flags) throws IOException {
+		Iterator<String> keys = map.keySet().iterator();
+		boolean conpact = (flags & FORMAT_JSON_COMPACT) != 0;
+		int indentStep = flags & JSON_INDENT_MASK;
+		int indentOff = (flags >> 16) + indentStep;
+		flags = (flags & 0xFFFF) | (indentOff << 16);
+		String key;
+		writer.write('{');
+		if (keys.hasNext()) {
+			if (indentOff != 0) {
+				writer.write('\n');
+				appendSpaces(writer, indentOff);
+			}
+			key = keys.next();
+			VariantString.writeJSONTo(writer, key);
+			writer.write(':');
+			if (!conpact) {
+				writer.write(' ');
+			}
+			serializeJSONElt(writer, map.get(key), flags);
+			while (keys.hasNext()) {
+				key = keys.next();
+				writer.write(',');
+				if (indentOff != 0) {
+					writer.write('\n');
+					appendSpaces(writer, indentOff);
+				} else if (!conpact) {
+					writer.write(' ');
+				}
+				VariantString.writeJSONTo(writer, key);
+				writer.write(':');
+				if (!conpact) {
+					writer.write(' ');
+				}
+				serializeJSONElt(writer, map.get(key), flags);
+			}
+			if (indentOff != 0) {
+				writer.write('\n');
+				appendSpaces(writer, indentOff - indentStep);
+			}
+		}
+		writer.write('}');
+	}
+
+	protected static void appendSpaces(OutputStreamWriter writer, int cout) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	protected static void serializeJSONElt(OutputStreamWriter writer,
+			Variant next, int flags) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	protected static void serializeJSON(OutputStreamWriter writer,
+			VariantList variantList, int i) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	protected static String[] split(String path, char sep) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

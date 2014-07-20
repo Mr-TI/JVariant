@@ -23,15 +23,15 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 
  * @author <a href="mailto:emericv@mbedsys.org">Emeric Verschuur</a>
  * Copyright 2014 MbedSYS
  */
-public class VariantMap implements Variant, Map<String, Variant> {
+public class VariantMap extends Variant implements Map<String, Variant> {
 	
 	private HashMap<String, Variant> data;
 	
@@ -48,59 +48,9 @@ public class VariantMap implements Variant, Map<String, Variant> {
 		data = new HashMap<>();
 	}
 	
-	public VariantMap(Map<String, Variant> properties) {
-		data = new HashMap<>(properties);
-	}
-
-    /**
-	 * Write the value in JSON format
-	 * 
-	 * @param writer output stream writer
-	 * @throws IOException 
-	 */
-	@Override
-	public void writeJSONTo(OutputStreamWriter writer, int flags) throws IOException {
-		Iterator<String> keys = data.keySet().iterator();
-		boolean conpact = (flags & FORMAT_JSON_COMPACT) != 0;
-		int indentStep = flags & JSON_INDENT_MASK;
-		int indentOff = (flags >> 16) + indentStep;
-		flags = (flags & 0xFFFF) | (indentOff << 16);
-		String key;
-		writer.write('{');
-		if (keys.hasNext()) {
-			if (indentOff != 0) {
-				writer.write('\n');
-				appendSpaces(writer, indentOff);
-			}
-			key = keys.next();
-			VariantString.writeJSONTo(writer, key);
-			writer.write(':');
-			if (!conpact) {
-				writer.write(' ');
-			}
-			data.get(key).writeJSONTo(writer, flags);
-			while (keys.hasNext()) {
-				key = keys.next();
-				writer.write(',');
-				if (indentOff != 0) {
-					writer.write('\n');
-					appendSpaces(writer, indentOff);
-				} else if (!conpact) {
-					writer.write(' ');
-				}
-				VariantString.writeJSONTo(writer, key);
-				writer.write(':');
-				if (!conpact) {
-					writer.write(' ');
-				}
-				data.get(key).writeJSONTo(writer, flags);
-			}
-			if (indentOff != 0) {
-				writer.write('\n');
-				appendSpaces(writer, indentOff - indentStep);
-			}
-		}
-		writer.write('}');
+	public VariantMap(Map<String, Variant> value) {
+		if (value == null)
+			throw new IllegalArgumentException("value argument cannot be null");
 	}
 
     @Override
@@ -130,46 +80,32 @@ public class VariantMap implements Variant, Map<String, Variant> {
 
 	public VariantMap put(String key, Object value) {
 		if (value == null) {
-			data.put(key, NullVariant.NULL);
+			data.put(key, Variant.NULL);
 		} else if (value instanceof Variant) {
 			data.put(key, (Variant) value);
 		} else if (value instanceof String) {
 			data.put(key, new VariantString((String) value));
 		} else {
-			data.put(key, new GenericVariant(value));
+			throw new IllegalArgumentException("Unsupported value type");
 		}
 		return this;
 	}
-	
-	@Override
-	public String toString_() {
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		OutputStreamWriter writer = new OutputStreamWriter(output);
-		try {
-			writeJSONTo(writer, 4);
-			writer.flush();
-		} catch (IOException e) {
-			System.out.println("AbstractVariant.toJSONString()\n"
-					+ PfException.getStackTraceToString(e));
-		}
-		return new String(output.toByteArray());
-	}
 
-    public static Variant resolvePath(Variant data, String path) {
+    public static Variant resolvePath(VariantMap data, String path) {
         return resolvePath(data, path, '.');
     }
 
-    public static Variant resolvePath(Variant data, String path, char sep) {
-        for (String key: Utils.split(path, sep)) {
+    public static VariantMap resolvePath(VariantMap data, String path, char sep) {
+        for (String key: split(path, sep)) {
             if (!data.containsKey(key)) {
                 return null;
             }
-            data = data.get(key);
+            data = data.get(key).toMap();
         }
         return data;
     }
 
-    private static void updatePath(VariantMap node, String[] pathParts, Variant value, int i) {
+	private static void updatePath(VariantMap node, String[] pathParts, Variant value, int i) {
         String k = pathParts[i++];
         if (i == pathParts.length) {
             if (value == null) {
@@ -195,18 +131,88 @@ public class VariantMap implements Variant, Map<String, Variant> {
     }
 
     public static Variant updatePath(Variant data, String path, Variant value) {
-        return updatePath(data, Utils.split(path, '.'), value);
+        return updatePath(data, split(path, '.'), value);
     }
 
-    @Override
-	public final String toJSONString_() {
+	@Override
+	public int compareTo(Object o) {
+		throw new UnsupportedOperationException("VariantMap cannot be compared to an other Variant");
+	}
+
+	@Override
+	public int size() {
+		return data.size();
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		return data.containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		return data.containsValue(value);
+	}
+
+	@Override
+	public Variant get(Object key) {
+		return data.get(key);
+	}
+
+	@Override
+	public Variant put(String key, Variant value) {
+		return data.put(key, value);
+	}
+
+	@Override
+	public Variant remove(Object key) {
+		return data.remove(key);
+	}
+
+	@Override
+	public void putAll(Map<? extends String, ? extends Variant> m) {
+		data.putAll(m);
+	}
+
+	@Override
+	public void clear() {
+		data.clear();
+	}
+
+	@Override
+	public Set<String> keySet() {
+		return data.keySet();
+	}
+
+	@Override
+	public Collection<Variant> values() {
+		return data.values();
+	}
+
+	@Override
+	public Set<java.util.Map.Entry<String, Variant>> entrySet() {
+		return data.entrySet();
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return data.isEmpty();
+	}
+
+	@Override
+	public boolean isNull() {
+		return false;
+	}
+
+	@Override
+	public String toString() {
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		OutputStreamWriter writer = new OutputStreamWriter(output);
 		try {
-			writeJSONTo(writer, FORMAT_JSON_COMPACT);
+			serializeJSONElt(writer, this, 4);
 			writer.flush();
 		} catch (IOException e) {
-			throw new Error(e);
+			throw new RuntimeException(e);
 		}
 		return new String(output.toByteArray());
 	}

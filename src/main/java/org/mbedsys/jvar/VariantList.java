@@ -19,8 +19,8 @@ package org.mbedsys.jvar;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -30,245 +30,186 @@ import java.util.ListIterator;
  * @author <a href="mailto:emericv@mbedsys.org">Emeric Verschuur</a>
  * Copyright 2014 MbedSYS
  */
-public class VariantList implements Variant, List<Variant> {
+public class VariantList extends Variant implements List<Variant> {
+	
+	List<Variant> data;
 
-    public VariantList(List emptyList) {
-		// TODO Auto-generated constructor stub
-	}
-
-	/**
-	 * Write the value in JSON format
-	 * 
-	 * @param writer output stream writer
-	 * @throws IOException 
-	 */
-	@Override
-	public void writeJSONTo(OutputStreamWriter writer, int flags) throws IOException {
-		boolean conpact = (flags & FORMAT_JSON_COMPACT) != 0;
-		int indentStep = flags & JSON_INDENT_MASK;
-		int indentOff = (flags >> 16) + indentStep;
-		flags = (flags & 0xFFFF) | (indentOff << 16);
-		Iterator<Variant> it = data.iterator();
-		writer.write('[');
-		if (it.hasNext()) {
-			if (indentOff != 0) {
-				writer.write('\n');
-				Utils.appendSpaces(writer, indentOff);
-			}
-			it.next().writeJSONTo(writer, flags);
-			while (it.hasNext()) {
-				writer.write(',');
-				if (indentOff != 0) {
-					writer.write('\n');
-					Utils.appendSpaces(writer, indentOff);
-				} else if (!conpact) {
-					writer.write(' ');
-				}
-				it.next().writeJSONTo(writer, flags);
-			}
-			if (indentOff != 0) {
-				writer.write('\n');
-				Utils.appendSpaces(writer, indentOff - indentStep);
-			}
-		}
-		writer.write(']');
+    public VariantList(List<Variant> value) {
+    	if (value == null)
+			throw new IllegalArgumentException("value argument cannot be null");
+		data = value;
 	}
 
 	public VariantList add(boolean value) {
-		data.add(new BooleanVariant(value));
-		return this;
-	}
-
-	public VariantList add(int value) {
-		data.add(new IntegerVariant(value));
-		return this;
-	}
-
-	public VariantList add(long value) {
-		data.add(new LongVariant(value));
+		data.add(new VariantBool(value));
 		return this;
 	}
 
 	public VariantList add(double value) {
-		data.add(new DoubleVariant(value));
+		data.add(new VariantDouble(value));
 		return this;
 	}
 
-	public VariantList add_(Object value) {
-		if (value == null) {
-			data.add(NullVariant.NULL);
-		} else if (value instanceof Variant) {
-			data.add((Variant) value);
-		} else if (value instanceof String) {
-			data.add(new StringVariant((String) value));
-		} else {
-			data.add(new GenericVariant(value));
-		}
+	public VariantList add(int value) {
+		data.add(new VariantInt(value));
+		return this;
+	}
+
+	@Override
+	public void add(int index, Variant element) {
+		data.add(index, element);
+	}
+
+	public VariantList add(long value) {
+		data.add(new VariantLong(value));
+		return this;
+	}
+
+	public VariantList add(String value) {
+		data.add(new VariantString(value));
+		return this;
+	}
+
+	public VariantList add(Date value) {
+		data.add(new VariantDateTime(value));
 		return this;
 	}
 	
 	@Override
-	public String toString_() {
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		OutputStreamWriter writer = new OutputStreamWriter(output);
-		try {
-			writeJSONTo(writer, 4);
-			writer.flush();
-		} catch (IOException e) {
-			System.out.println("AbstractVariant.toJSONString()\n"
-					+ PfException.getStackTraceToString(e));
-		}
-		return new String(output.toByteArray());
-	}
-
-    @Override
-	public final String toJSONString_() {
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		OutputStreamWriter writer = new OutputStreamWriter(output);
-		try {
-			writeJSONTo(writer, FORMAT_JSON_COMPACT);
-			writer.flush();
-		} catch (IOException e) {
-			throw new Error(e);
-		}
-		return new String(output.toByteArray());
+	public boolean add(Variant e) {
+		return data.add(e);
 	}
 
 	@Override
-	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+	public boolean addAll(Collection<? extends Variant> c) {
+		return data.addAll(c);
 	}
 
 	@Override
-	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean addAll(int index, Collection<? extends Variant> c) {
+		return data.addAll(index, c);
+	}
+
+	@Override
+	public void clear() {
+		data.clear();
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		throw new UnsupportedOperationException("VariantList cannot be compared to an other Variant");
 	}
 
 	@Override
 	public boolean contains(Object o) {
-		// TODO Auto-generated method stub
+		return data.contains(o);
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		return data.containsAll(c);
+	}
+
+	@Override
+	public Variant get(int index) {
+		return data.get(index);
+	}
+
+	@Override
+	public int indexOf(Object o) {
+		return data.indexOf(o);
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return data.isEmpty();
+	}
+
+	@Override
+	public boolean isNull() {
 		return false;
 	}
 
 	@Override
 	public Iterator<Variant> iterator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object[] toArray() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <T> T[] toArray(T[] a) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean add(Variant e) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean remove(Object o) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean containsAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean addAll(Collection<? extends Variant> c) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean addAll(int index, Collection<? extends Variant> c) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean removeAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean retainAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void clear() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Variant get(int index) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Variant set(int index, Variant element) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void add(int index, Variant element) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Variant remove(int index) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int indexOf(Object o) {
-		// TODO Auto-generated method stub
-		return 0;
+		return data.iterator();
 	}
 
 	@Override
 	public int lastIndexOf(Object o) {
-		// TODO Auto-generated method stub
-		return 0;
+		return data.lastIndexOf(o);
 	}
 
 	@Override
 	public ListIterator<Variant> listIterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return data.listIterator();
 	}
 
 	@Override
 	public ListIterator<Variant> listIterator(int index) {
-		// TODO Auto-generated method stub
-		return null;
+		return data.listIterator(index);
+	}
+
+	@Override
+	public Variant remove(int index) {
+		return data.remove(index);
+	}
+
+	@Override
+	public boolean remove(Object o) {
+		return data.remove(o);
+	}
+
+	@Override
+	public boolean removeAll(Collection<?> c) {
+		return data.removeAll(c);
+	}
+
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		return data.retainAll(c);
+	}
+
+	@Override
+	public Variant set(int index, Variant element) {
+		return data.set(index, element);
+	}
+
+	@Override
+	public int size() {
+		return data.size();
 	}
 
 	@Override
 	public List<Variant> subList(int fromIndex, int toIndex) {
-		// TODO Auto-generated method stub
-		return null;
+		return data.subList(fromIndex, toIndex);
+	}
+
+	@Override
+	public Object[] toArray() {
+		return data.toArray();
+	}
+
+	@Override
+	public <T> T[] toArray(T[] a) {
+		return data.toArray(a);
+	}
+
+	@Override
+	public String toString() {
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		OutputStreamWriter writer = new OutputStreamWriter(output);
+		try {
+			serializeJSON(writer, this, 4);
+			writer.flush();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return new String(output.toByteArray());
+	}
+
+	@Override
+	public Type type() {
+		return Type.LIST;
 	}
 }

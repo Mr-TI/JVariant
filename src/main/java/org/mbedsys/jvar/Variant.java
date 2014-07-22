@@ -18,6 +18,7 @@ package org.mbedsys.jvar;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,25 @@ public abstract class Variant implements Comparable<Object> {
 	};
 
 	public static int JSON_INDENT_MASK = 0x0000001F;
+	
+	private static char[] spaces = null;
+
+	public static void appendSpaces(StringBuffer buffer, int count) {
+		if (spaces == null || spaces.length < count) {
+			spaces = new char[count + 32];
+			Arrays.fill(spaces, ' ');
+		}
+		buffer.append(spaces, 0, count);
+	}
+
+	public static void appendSpaces(OutputStreamWriter writer, int count)
+			throws IOException {
+		if (spaces == null || spaces.length < count) {
+			spaces = new char[count + 32];
+			Arrays.fill(spaces, ' ');
+		}
+		writer.write(spaces, 0, count);
+	}
 
 	/**
 	 * Returns the variant as a boolean.
@@ -332,7 +352,7 @@ public abstract class Variant implements Comparable<Object> {
 	 * @param writer output stream writer
 	 * @throws IOException 
 	 */
-	public static void serializeJSONMap(OutputStreamWriter writer, Map<String, Variant> map, int flags) throws IOException {
+	private static void serializeJSONMap(OutputStreamWriter writer, Map<String, Variant> map, int flags) throws IOException {
 		Iterator<String> keys = map.keySet().iterator();
 		boolean conpact = (flags & FORMAT_JSON_COMPACT) != 0;
 		int indentStep = flags & JSON_INDENT_MASK;
@@ -376,25 +396,55 @@ public abstract class Variant implements Comparable<Object> {
 		writer.write('}');
 	}
 
-	protected static void appendSpaces(OutputStreamWriter writer, int cout) {
-		// TODO Auto-generated method stub
-		
-	}
-
 	protected static void serializeJSONElt(OutputStreamWriter writer,
-			Variant next, int flags) {
-		// TODO Auto-generated method stub
+			Variant variant, int flags) throws IOException {
+		switch (variant.type()) {
+		case BOOL:
+			writer.append(variant.booleanValue()?"true":"false");
+			break;
+		case BYTE:
+			writer.append(Byte.toString(variant.byteValue()));
+			break;
+		case BYTEARRAY:
+		case STRING:
+		case DATETIME:
+			VariantString.writeJSONTo(writer, variant.toString());
+			break;
+		case LIST:
+			serializeJSONList(writer, variant.toList(), flags);
+			break;
+		case MAP:
+			serializeJSONMap(writer, variant.toMap(), flags);
+			break;
+		case NULL:
+			writer.append("null");
+			break;
+		case INT:
+		case UINT:
+		case LONG:
+		case ULONG:
+			writer.append(Long.toString(variant.longValue()));
+			break;
+		case DOUBLE:
+			writer.append(Double.toString(variant.doubleValue()));
+			break;
+		default:
+			break;
 		
+		}
 	}
 
 	protected static void serializeJSON(OutputStreamWriter writer,
-			VariantList variantList, int i) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	protected static String[] split(String path, char sep) {
-		// TODO Auto-generated method stub
-		return null;
+			Variant variant, int flags) throws IOException {
+		switch (variant.type()) {
+		case LIST:
+			serializeJSONList(writer, variant.toList(), flags);
+			break;
+		case MAP:
+			serializeJSONMap(writer, variant.toMap(), flags);
+			break;
+		default:
+			throw new IllegalArgumentException("The root node to serialize must be an map or an array");
+		}
 	}
 }

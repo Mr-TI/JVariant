@@ -18,6 +18,7 @@ package org.mbedsys.jvar;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.StringTokenizer;
 
 /**
  * 
@@ -152,5 +153,75 @@ public class VariantString extends Variant {
 	@Override
 	public boolean isNull() {
 		return false;
+	}
+
+	public static String toCamelCase(String s, boolean firstCharToUpperCase) {
+		StringBuffer result = new StringBuffer();
+		String ref = s.toLowerCase();
+		if (ref.length() != 0) {
+			if (firstCharToUpperCase) {
+				result.append(Character.toUpperCase(ref.charAt(0)));
+			} else {
+				result.append(ref.charAt(0));
+			}
+		}
+		boolean uppercase = false;
+		for (int i = 1; i < ref.length(); i++) {
+			char c = ref.charAt(i);
+			if (c == '_') {
+				uppercase = true;
+				continue;
+			}
+			if (uppercase) {
+				result.append(Character.toUpperCase(ref.charAt(i)));
+				uppercase = false;
+			} else {
+				result.append(ref.charAt(i));
+			}
+		}
+
+		return result.toString();
+	}
+
+	public static String escape(String s) {
+		StringBuffer result = new StringBuffer();
+		char c;
+		for (int i = 0; i < s.length(); i++) {
+			c = s.charAt(i);
+			switch (c) {
+			case '\\':
+			case '"':
+			case '\b':
+			case '\f':
+			case '\n':
+			case '\r':
+			case '\t':
+				result.append('\\');
+			default:
+				result.append(c);
+				break;
+			}
+		}
+		return result.toString();
+	}
+
+	public static String[] split(String src, char sep) {
+		StringTokenizer st = new StringTokenizer(src, "" + sep);
+		String[] ret = new String[st.countTokens()];
+		int i = 0;
+		for (i = 0; i < ret.length; i++) {
+			ret[i] = st.nextToken();
+		}
+		return ret;
+	}
+
+	public static String[] split(String src, String sep) {
+		StringTokenizer st = new StringTokenizer(src, sep);
+		String[] ret = new String[st.countTokens()];
+		int i = 0;
+		for (i = 0; i < ret.length; i++) {
+			ret[i] = st.nextToken();
+		}
+		return ret;
 	}
 }

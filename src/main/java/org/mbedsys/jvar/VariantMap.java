@@ -96,7 +96,7 @@ public class VariantMap extends Variant implements Map<String, Variant> {
     }
 
     public static VariantMap resolvePath(VariantMap data, String path, char sep) {
-        for (String key: split(path, sep)) {
+        for (String key: VariantString.split(path, sep)) {
             if (!data.containsKey(key)) {
                 return null;
             }
@@ -131,7 +131,7 @@ public class VariantMap extends Variant implements Map<String, Variant> {
     }
 
     public static Variant updatePath(Variant data, String path, Variant value) {
-        return updatePath(data, split(path, '.'), value);
+        return updatePath(data, VariantString.split(path, '.'), value);
     }
 
 	@Override

@@ -1,0 +1,47 @@
+package org.mbedsys.jvar;
+/*
+ *   Autor: Emeric Verschuur <emericv@mbedsys.org>
+ */
+
+import java_cup.runtime.*;
+
+parser code
+{:
+	public Node root = null;
+	
+:};
+
+terminal              TEND, TOBJBEGIN, TOBJEND, TARRBEGIN, TARREND;
+terminal              TMEMBERSEP, TELEMENTSEP;
+terminal              TSYNERRESC, TSYNERRUNI, TSYNERR;
+terminal String       TSTRING;
+terminal Variant      TVARIANT;
+
+
+non terminal Variant      members;
+non terminal Variant      elements;
+non terminal Variant      variant;
+non terminal Variant      root;
+
+start with root;
+
+root ::= variant                          {: :}
+    | TEND                              {: :}
+    ;
+
+variant ::= TOBJBEGIN members TOBJEND     {: :}
+    | TARRBEGIN elements TARREND        {: :}
+    | TOBJBEGIN TOBJEND                 {: :}
+    | TARRBEGIN TARREND                 {: :}
+    | TSTRING                           {: :}
+    | TVARIANT                          {: :}
+    ;
+
+members ::= members TELEMENTSEP
+        TSTRING TMEMBERSEP variant       {: :}
+    | TSTRING TMEMBERSEP variant         {: :}
+    ;
+
+elements ::= elements TELEMENTSEP variant {: :}
+    | variant                           {: :}
+    ;

@@ -19,6 +19,7 @@ package org.mbedsys.jvar;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -38,6 +39,10 @@ public class VariantList extends Variant implements List<Variant> {
     	if (value == null)
 			throw new IllegalArgumentException("value argument cannot be null");
 		data = value;
+	}
+
+	public VariantList() {
+		data = new ArrayList<>();
 	}
 
 	public VariantList add(boolean value) {

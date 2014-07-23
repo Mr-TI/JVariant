@@ -22,10 +22,10 @@ package org.mbedsys.jvar;
  * Copyright 2014 MbedSYS
  */
 public class KeyNotFoundException extends RuntimeException {
-    /**
+	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -3405718663353821037L;
 
 	public KeyNotFoundException() {
 		super();

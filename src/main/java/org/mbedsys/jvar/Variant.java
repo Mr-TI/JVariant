@@ -16,10 +16,11 @@
 
 package org.mbedsys.jvar;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -42,6 +43,10 @@ public abstract class Variant implements Comparable<Object> {
 
 	public enum Type {
 		BOOL, BYTE, BYTEARRAY, DATETIME, DOUBLE, INT, LIST, LONG, MAP, NULL, STRING, UINT, ULONG
+	}
+
+	public enum Format {
+		JSON, BSON, BCON
 	}
 
 	public static final Variant NULL = new VariantNull();
@@ -369,6 +374,89 @@ public abstract class Variant implements Comparable<Object> {
 	public abstract Type type();
 
 	/**
+	 * Abstract parser
+	 */
+	public static abstract class Parser {
+		/**
+		 * Parse next node on the stream
+		 * 
+		 * @param wait wait for available data on stream
+		 * @return a Variant object or null if wait=<code>false</code> and no data is available 
+		 * @throws IOException on IO/parsing error
+		 */
+		public abstract Variant next(boolean wait) throws IOException;
+		
+		/**
+		 * Parse next node on the stream
+		 * 
+		 * @return a Variant object
+		 * @throws IOException on IO/parsing error
+		 */
+		public Variant next() throws IOException {
+			return next(true);
+		}
+	}
+
+	/**
+	 * Return the suitable parser corresponding to the given format
+	 * 
+	 * @param input Data stream
+	 * @param format Data format type
+	 * @return the suitable parser
+	 */
+	public static Parser newParser(final InputStream input, Format format) {
+		switch (format) {
+		case BCON:
+			return new Parser() {
+				@Override
+				public Variant next(boolean wait) throws IOException {
+					if (!wait && input.available() == 0) {
+						return null;
+					}
+					return parseBCON(input, null);
+				}
+			};
+		case BSON:
+			return new Parser() {
+				@Override
+				public Variant next(boolean wait) throws IOException {
+					if (!wait && input.available() == 0) {
+						return null;
+					}
+					return parseBSONDocument(input);
+				}
+			};
+		case JSON:
+			return new Parser() {
+				JSONScanner scanner = new JSONScanner(new InputStreamReader(
+						input));
+
+				@Override
+				public Variant next(boolean wait) throws IOException {
+					if (!wait && !scanner.ready()) {
+						return null;
+					}
+					JSONTocken t = scanner.yylex();
+					switch (t.getId()) {
+					case JSONTocken.TEOF:
+						throw new EOFException();
+					case JSONTocken.TOBJBEGIN:
+						return parseJSONObject(scanner);
+					case JSONTocken.TARRBEGIN:
+						return parseJSONArray(scanner);
+					default:
+						throwJSONError(t, new int[] { JSONTocken.TOBJBEGIN,
+								JSONTocken.TARRBEGIN });
+					}
+					return null;
+				}
+			};
+		default:
+			throw new IllegalArgumentException("Unsupported format");
+		}
+	}
+
+	/**
 	 * Write the value in JSON format
 	 * 
 	 * @param writer
@@ -497,7 +585,7 @@ public abstract class Variant implements Comparable<Object> {
 		}
 	}
 
-	protected static void serializeJSON(OutputStreamWriter writer,
+	public static void serializeJSON(OutputStreamWriter writer,
 			Variant variant, int flags) throws IOException {
 		switch (variant.type()) {
 		case LIST:
@@ -534,8 +622,13 @@ public abstract class Variant implements Comparable<Object> {
 		output.write(((byte) (((value >> 56) & 0xFF))));
 	}
 
+	public static void serializeBCON(OutputStream output, Variant variant)
+			throws IOException {
+		serializeBCON(output, variant, null);
+	}
+
 	private static void serializeBCON(OutputStream output, Variant variant,
-			String key) throws IOException, SerializerException {
+			String key) throws IOException {
 		switch (variant.type()) {
 		case NULL:
 			output.write(BCON_TOKEN_NULL);
@@ -674,8 +767,13 @@ public abstract class Variant implements Comparable<Object> {
 		output.write((byte) (((value >> 56) & 0xFF)));
 	}
 
+	public static void serializeBSON(OutputStream output, Variant variant)
+			throws IOException {
+		output.write(serializeBSONDocument(variant));
+	}
+
 	private static byte[] serializeBSONDocument(Variant variant)
-			throws IOException, SerializerException {
+			throws IOException {
 		ByteArrayOutputStream payload = new ByteArrayOutputStream();
 		switch (variant.type()) {
 		case MAP: // Case of BSON object
@@ -705,7 +803,7 @@ public abstract class Variant implements Comparable<Object> {
 	}
 
 	private static byte[] serializeBSONElt(Variant variant, String key)
-			throws IOException, SerializerException {
+			throws IOException {
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		switch (variant.type()) {
 		case NULL:
@@ -788,7 +886,7 @@ public abstract class Variant implements Comparable<Object> {
 			break;
 		}
 		default:
-			throw new SerializerException("Fatal: QVariant type not managed.");
+			throw new SerializerException("Fatal: Variant type not managed.");
 
 		}
 		return output.toByteArray();
@@ -810,8 +908,8 @@ public abstract class Variant implements Comparable<Object> {
 				| ((long) (input.read() & 0xFF) << 56);
 	}
 
-	private static Variant parseBCON(ByteArrayInputStream input,
-			StringBuilder key) throws ParserException, IOException {
+	private static Variant parseBCON(InputStream input, StringBuilder key)
+			throws IOException {
 		Variant ret;
 		byte c = (byte) input.read();
 		if ((c & 0x80) != 0) {
@@ -914,14 +1012,14 @@ public abstract class Variant implements Comparable<Object> {
 		}
 		if (key != null) {
 			while ((c = (byte) input.read()) != '\0') {
-				key.append(c);
+				key.append((char)c);
 			}
 		}
 		return ret;
 	}
 
 	private static Variant parseBSONDocument(InputStream input)
-			throws IOException, ParserException {
+			throws IOException {
 		read32(input);
 		HashMap<String, Variant> map = new HashMap<>();
 		while (true) {
@@ -935,14 +1033,14 @@ public abstract class Variant implements Comparable<Object> {
 	}
 
 	private static Variant parseBSONElt(InputStream input, StringBuilder key)
-			throws IOException, ParserException {
+			throws IOException {
 		byte c, t = (byte) input.read();
 		Variant res;
 		if (t == BSON_TOKEN_END) {
 			return null;
 		}
 		while ((c = (byte) input.read()) != '\0') {
-			key.append(c);
+			key.append((char)c);
 		}
 		switch (t) {
 		case BSON_TOKEN_UNDEF:
@@ -1008,7 +1106,7 @@ public abstract class Variant implements Comparable<Object> {
 				Variant subValue = parseBSONElt(input, subKey);
 				if (subValue == null)
 					break;
-				map.put(key.toString(), subValue);
+				map.put(subKey.toString(), subValue);
 			}
 			res = new VariantMap(map);
 			break;
@@ -1021,7 +1119,7 @@ public abstract class Variant implements Comparable<Object> {
 				Variant subValue = parseBSONElt(input, subKey);
 				if (subValue == null)
 					break;
-				list.add(Integer.parseInt(key.toString()), subValue);
+				list.add(Integer.parseInt(subKey.toString()), subValue);
 			}
 			res = new VariantList(list);
 			break;
@@ -1032,8 +1130,9 @@ public abstract class Variant implements Comparable<Object> {
 		}
 		return res;
 	}
-	
-	private static Variant processJSONObject(JSONScanner scanner) throws ParserException, IOException {
+
+	private static Variant parseJSONObject(JSONScanner scanner)
+			throws IOException {
 		HashMap<String, Variant> map = new HashMap<>();
 		JSONTocken tocken;
 		String key = null;
@@ -1075,10 +1174,10 @@ public abstract class Variant implements Comparable<Object> {
 			tocken = scanner.yylex();
 			switch (tocken.getId()) {
 			case JSONTocken.TOBJBEGIN:
-				value = processJSONObject(scanner);
+				value = parseJSONObject(scanner);
 				break;
 			case JSONTocken.TARRBEGIN:
-				value = processJSONArray(scanner);
+				value = parseJSONArray(scanner);
 				break;
 			case JSONTocken.TSTRING:
 			case JSONTocken.TVARIANT:
@@ -1092,7 +1191,8 @@ public abstract class Variant implements Comparable<Object> {
 		}
 	}
 
-	private static Variant processJSONArray(JSONScanner scanner) throws ParserException, IOException {
+	private static Variant parseJSONArray(JSONScanner scanner)
+			throws IOException {
 		ArrayList<Variant> list = new ArrayList<>();
 		JSONTocken tocken;
 		Variant value = null;
@@ -1132,10 +1232,10 @@ public abstract class Variant implements Comparable<Object> {
 			}
 			switch (tocken.getId()) {
 			case JSONTocken.TOBJBEGIN:
-				value = processJSONObject(scanner);
+				value = parseJSONObject(scanner);
 				break;
 			case JSONTocken.TARRBEGIN:
-				value = processJSONArray(scanner);
+				value = parseJSONArray(scanner);
 				break;
 			case JSONTocken.TSTRING:
 			case JSONTocken.TVARIANT:
@@ -1150,13 +1250,13 @@ public abstract class Variant implements Comparable<Object> {
 	}
 
 	private static void throwJSONError(JSONTocken tocken, int expectedTockenId)
-			throws ParserException {
+			throws IOException {
 		throw new ParserException("Unexpected " + tocken + ". "
 				+ JSONTocken.toString(expectedTockenId) + " expected instead.");
 	}
 
 	private static void throwJSONError(JSONTocken tocken, int[] tokens)
-			throws ParserException {
+			throws IOException {
 		StringBuffer buffer = new StringBuffer("Unexpected " + tocken + ". ");
 		for (int i = 0; i < tokens.length - 1; i++) {
 			buffer.append(JSONTocken.toString(tokens[i]));

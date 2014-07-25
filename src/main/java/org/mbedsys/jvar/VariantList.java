@@ -35,10 +35,10 @@ public class VariantList extends Variant implements List<Variant> {
 	
 	List<Variant> data;
 
-    public VariantList(List<Variant> value) {
-    	if (value == null)
+    public VariantList(Collection<Variant> collection) {
+    	if (collection == null)
 			throw new IllegalArgumentException("value argument cannot be null");
-		data = value;
+		data = new ArrayList<>(collection);
 	}
 
 	public VariantList() {
@@ -211,6 +211,11 @@ public class VariantList extends Variant implements List<Variant> {
 			throw new RuntimeException(e);
 		}
 		return new String(output.toByteArray());
+	}
+	
+	@Override
+	public VariantList toList() {
+		return this;
 	}
 
 	@Override

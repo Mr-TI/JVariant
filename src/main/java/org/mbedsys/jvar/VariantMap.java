@@ -33,7 +33,7 @@ import java.util.Set;
  */
 public class VariantMap extends Variant implements Map<String, Variant> {
 	
-	private HashMap<String, Variant> data;
+	private Map<String, Variant> data;
 	
 	public VariantMap(Dictionary<String, String> dic) {
 		data = new HashMap<>();
@@ -44,16 +44,17 @@ public class VariantMap extends Variant implements Map<String, Variant> {
 		}
 	}
 	
-	public VariantMap() {
-		data = new HashMap<>();
-	}
-	
 	public VariantMap(Map<String, Variant> value) {
 		if (value == null)
 			throw new IllegalArgumentException("value argument cannot be null");
+		this.data = new HashMap<>(value);
 	}
 
-    @Override
+    private VariantMap() {
+    	this.data = new HashMap<>();
+	}
+
+	@Override
 	public Type type() {
 		return Type.MAP;
 	}
@@ -216,5 +217,14 @@ public class VariantMap extends Variant implements Map<String, Variant> {
 		}
 		return new String(output.toByteArray());
 	}
-
+	
+	@Override
+	public VariantMap toMap() {
+		return this;
+	}
+	
+	@Override
+	public VariantList toList() {
+		return new VariantList(data.values());
+	}
 }

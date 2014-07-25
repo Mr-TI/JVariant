@@ -38,12 +38,12 @@ public class VariantBool extends VariantNumber {
 
     @Override
     public boolean booleanValue() {
-        return super.booleanValue();
+        return data;
     }
 
     @Override
     public byte byteValue() {
-        return super.byteValue();
+        return (byte) (data ? 1 : 0);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class VariantBool extends VariantNumber {
 
     @Override
     public double doubleValue() {
-        return super.doubleValue();
+        return data ? 1 : 0;
     }
 
     @Override
@@ -65,7 +65,7 @@ public class VariantBool extends VariantNumber {
 
     @Override
     public float floatValue() {
-        return super.floatValue();
+        return data ? 1 : 0;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class VariantBool extends VariantNumber {
 
     @Override
     public int intValue() {
-        return super.intValue();
+        return data ? 1 : 0;
     }
 
     @Override
@@ -98,12 +98,12 @@ public class VariantBool extends VariantNumber {
 
     @Override
     public long longValue() {
-        return super.longValue();
+        return data ? 1 : 0;
     }
 
     @Override
     public short shortValue() {
-        return super.shortValue();
+        return (short) (data ? 1 : 0);
     }
 
     @Override

@@ -83,7 +83,7 @@ public class VariantUInt extends VariantNumber {
 
 	@Override
 	public long longValue() {
-		return data;
+		return data & 0xFFFFFFFFL;
 	}
 
 	@Override

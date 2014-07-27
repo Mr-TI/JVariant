@@ -796,7 +796,7 @@ public abstract class Variant implements Comparable<Object> {
 		}
 		byte[] payloadBytes = payload.toByteArray();
 		ByteArrayOutputStream ret = new ByteArrayOutputStream();
-		write32(ret, payloadBytes.length + 1);
+		write32(ret, payloadBytes.length + 5);
 		ret.write(payloadBytes);
 		ret.write(BSON_TOKEN_END);
 		return ret.toByteArray();

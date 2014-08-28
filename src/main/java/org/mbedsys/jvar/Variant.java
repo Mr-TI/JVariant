@@ -465,7 +465,7 @@ public abstract class Variant implements Comparable<Object> {
 	 */
 	private static void serializeJSONList(OutputStreamWriter writer,
 			List<Variant> list, int flags) throws IOException {
-		boolean conpact = (flags & FORMAT_JSON_COMPACT) != 0;
+		boolean compact = (flags & FORMAT_JSON_COMPACT) != 0;
 		int indentStep = flags & JSON_INDENT_MASK;
 		int indentOff = (flags >> 16) + indentStep;
 		flags = (flags & 0xFFFF) | (indentOff << 16);
@@ -482,7 +482,7 @@ public abstract class Variant implements Comparable<Object> {
 				if (indentOff != 0) {
 					writer.write('\n');
 					appendSpaces(writer, indentOff);
-				} else if (!conpact) {
+				} else if (!compact) {
 					writer.write(' ');
 				}
 				serializeJSONElt(writer, it.next(), flags);
@@ -505,7 +505,7 @@ public abstract class Variant implements Comparable<Object> {
 	private static void serializeJSONMap(OutputStreamWriter writer,
 			Map<String, Variant> map, int flags) throws IOException {
 		Iterator<String> keys = map.keySet().iterator();
-		boolean conpact = (flags & FORMAT_JSON_COMPACT) != 0;
+		boolean compact = (flags & FORMAT_JSON_COMPACT) != 0;
 		int indentStep = flags & JSON_INDENT_MASK;
 		int indentOff = (flags >> 16) + indentStep;
 		flags = (flags & 0xFFFF) | (indentOff << 16);
@@ -519,7 +519,7 @@ public abstract class Variant implements Comparable<Object> {
 			key = keys.next();
 			VariantString.writeJSONTo(writer, key);
 			writer.write(':');
-			if (!conpact) {
+			if (!compact) {
 				writer.write(' ');
 			}
 			serializeJSONElt(writer, map.get(key), flags);
@@ -529,12 +529,12 @@ public abstract class Variant implements Comparable<Object> {
 				if (indentOff != 0) {
 					writer.write('\n');
 					appendSpaces(writer, indentOff);
-				} else if (!conpact) {
+				} else if (!compact) {
 					writer.write(' ');
 				}
 				VariantString.writeJSONTo(writer, key);
 				writer.write(':');
-				if (!conpact) {
+				if (!compact) {
 					writer.write(' ');
 				}
 				serializeJSONElt(writer, map.get(key), flags);

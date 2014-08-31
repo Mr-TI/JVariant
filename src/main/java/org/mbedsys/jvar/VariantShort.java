@@ -18,21 +18,21 @@ package org.mbedsys.jvar;
 
 
 /**
- * Signed integer variant
+ * Signed short integer variant
  * 
  * @author <a href="mailto:emericv@mbedsys.org">Emeric Verschuur</a>
  * Copyright 2014 MbedSYS
  */
-public class VariantInt extends VariantNumber {
+public class VariantShort extends VariantNumber {
 	
-	protected int data;
+	protected short data;
 
 	/**
-	 * Int variant constructor from a value
+	 * Short variant constructor from a value
 	 * 
 	 * @param value
 	 */
-	public VariantInt(int value) {
+	public VariantShort(short value) {
 		data = value;
 	}
 

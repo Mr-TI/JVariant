@@ -62,6 +62,38 @@ public abstract class VariantNumber extends Variant {
                 + Integer.toHexString(0x10000 | (int)((value >> 16) & 0xffff)).substring(1).toUpperCase()
                 + Integer.toHexString(0x10000 | (int)(value & 0xffff)).substring(1).toUpperCase();
     }
+	
+	public static VariantNumber optimize(int number) {
+		if ((number & 0x7FFFFF80) == 0) {
+			return new VariantByte((byte)number);
+		} else if ((number & 0xFFFF8000) == 0) {
+			return new VariantUShort((short)number);
+		} else if ((number & 0x7FFF8000) == 0) {
+			return new VariantShort((short)number);
+		} else if ((number & 0x80000000) == 0) {
+			return new VariantUInt(number);
+		} else {
+			return new VariantInt(number);
+		}
+	}
+	
+	public static VariantNumber optimize(long number) {
+		if ((number & 0x7FFFFFFFFFFFFF80L) == 0) {
+			return new VariantByte((byte)number);
+		} else if ((number & 0xFFFFFFFFFFFF8000L) == 0) {
+			return new VariantUShort((short)number);
+		} else if ((number & 0x7FFFFFFFFFFF8000L) == 0) {
+			return new VariantShort((short)number);
+		} else if ((number & 0xFFFFFFFF80000000L) == 0) {
+			return new VariantUInt((int)number);
+		} else if ((number & 0x7FFFFFFF80000000L) == 0) {
+			return new VariantInt((int)number);
+		} else if ((number & 0x8000000000000000L) == 0) {
+			return new VariantULong(number);
+		} else {
+			return new VariantLong(number);
+		}
+	}
 
 	/**
 	 * Get the state of a single value bit

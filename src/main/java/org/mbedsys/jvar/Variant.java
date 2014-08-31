@@ -42,7 +42,7 @@ import java.util.Random;
 public abstract class Variant implements Comparable<Object> {
 
 	public enum Type {
-		BOOL, BYTE, BYTEARRAY, DATETIME, DOUBLE, INT, LIST, LONG, MAP, NULL, STRING, UINT, ULONG
+		BOOL, BYTE, BYTEARRAY, DATETIME, DOUBLE, SHORT, INT, LIST, LONG, MAP, NULL, STRING, USHORT, UINT, ULONG
 	}
 
 	public enum Format {
@@ -97,14 +97,16 @@ public abstract class Variant implements Comparable<Object> {
 	private static final byte BCON_TOKEN_TRUE = (byte) 0x02;
 	private static final byte BCON_TOKEN_FALSE = (byte) 0x03;
 	private static final byte BCON_TOKEN_BYTE = (byte) 0x04;
-	private static final byte BCON_TOKEN_INT32 = (byte) 0x05;
-	private static final byte BCON_TOKEN_INT64 = (byte) 0x06;
-	private static final byte BCON_TOKEN_UINT32 = (byte) 0x07;
-	private static final byte BCON_TOKEN_UINT64 = (byte) 0x08;
-	private static final byte BCON_TOKEN_DOUBLE = (byte) 0x0A;
-	private static final byte BCON_TOKEN_DATETIME = (byte) 0x0B;
-	private static final byte BCON_TOKEN_MAP = (byte) 0x0C;
-	private static final byte BCON_TOKEN_LIST = (byte) 0x0D;
+	private static final byte BCON_TOKEN_INT16 = (byte) 0x05;
+	private static final byte BCON_TOKEN_UINT16 = (byte) 0x06;
+	private static final byte BCON_TOKEN_INT32 = (byte) 0x07;
+	private static final byte BCON_TOKEN_UINT32 = (byte) 0x08;
+	private static final byte BCON_TOKEN_INT64 = (byte) 0x09;
+	private static final byte BCON_TOKEN_UINT64 = (byte) 0x0A;
+	private static final byte BCON_TOKEN_DOUBLE = (byte) 0x0B;
+	private static final byte BCON_TOKEN_DATETIME = (byte) 0x0C;
+	private static final byte BCON_TOKEN_LIST = (byte) 0x0E;
+	private static final byte BCON_TOKEN_MAP = (byte) 0x0F;
 	private static final byte BCON_TOKEN_DATA6 = (byte) 0xA0;
 	private static final byte BCON_TOKEN_STRING6 = (byte) 0xC0;
 	private static final byte BCON_TOKEN_DATA12 = (byte) 0x10;
@@ -570,6 +572,8 @@ public abstract class Variant implements Comparable<Object> {
 		case NULL:
 			writer.append("null");
 			break;
+		case SHORT:
+		case USHORT:
 		case INT:
 		case UINT:
 		case LONG:
@@ -598,6 +602,13 @@ public abstract class Variant implements Comparable<Object> {
 			throw new IllegalArgumentException(
 					"The root node to serialize must be an map or an array");
 		}
+	}
+
+	private static void write16(OutputStream output, byte type, short value)
+			throws IOException {
+		output.write(type);
+		output.write(((byte) ((value & 0xFF))));
+		output.write(((byte) (((value >> 8) & 0xFF))));
 	}
 
 	private static void write32(OutputStream output, byte type, int value)
@@ -641,20 +652,28 @@ public abstract class Variant implements Comparable<Object> {
 			output.write(BCON_TOKEN_BYTE);
 			output.write(variant.byteValue());
 			break;
-		case UINT: {
-			write32(output, BCON_TOKEN_UINT32, variant.intValue());
+		case SHORT: {
+			write16(output, BCON_TOKEN_INT32, variant.shortValue());
 			break;
 		}
-		case ULONG: {
-			write64(output, BCON_TOKEN_UINT64, variant.intValue());
+		case USHORT: {
+			write16(output, BCON_TOKEN_UINT32, variant.shortValue());
 			break;
 		}
 		case INT: {
 			write32(output, BCON_TOKEN_INT32, variant.intValue());
 			break;
 		}
+		case UINT: {
+			write32(output, BCON_TOKEN_UINT32, variant.intValue());
+			break;
+		}
 		case LONG: {
 			write64(output, BCON_TOKEN_INT64, variant.longValue());
+			break;
+		}
+		case ULONG: {
+			write64(output, BCON_TOKEN_UINT64, variant.intValue());
 			break;
 		}
 		case DOUBLE: {
@@ -897,6 +916,10 @@ public abstract class Variant implements Comparable<Object> {
 				| ((input.read() & 0xFF) << 16) | ((input.read() & 0xFF) << 24);
 	}
 
+	private static short read16(InputStream input) throws IOException {
+		return (short) ((input.read() & 0xFF) | ((input.read() & 0xFF) << 8));
+	}
+
 	private static long read64(InputStream input) throws IOException {
 		return (long) (input.read() & 0xFF)
 				| ((long) (input.read() & 0xFF) << 8)
@@ -965,14 +988,20 @@ public abstract class Variant implements Comparable<Object> {
 			case BCON_TOKEN_BYTE:
 				ret = new VariantByte((byte) input.read());
 				break;
+			case BCON_TOKEN_INT16:
+				ret = new VariantShort(read16(input));
+				break;
+			case BCON_TOKEN_UINT16:
+				ret = new VariantUShort(read16(input));
+				break;
 			case BCON_TOKEN_INT32:
 				ret = new VariantInt(read32(input));
 				break;
-			case BCON_TOKEN_INT64:
-				ret = new VariantLong(read64(input));
-				break;
 			case BCON_TOKEN_UINT32:
 				ret = new VariantUInt(read32(input));
+				break;
+			case BCON_TOKEN_INT64:
+				ret = new VariantLong(read64(input));
 				break;
 			case BCON_TOKEN_UINT64:
 				ret = new VariantULong(read64(input));

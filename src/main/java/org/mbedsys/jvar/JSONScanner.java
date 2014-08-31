@@ -264,15 +264,6 @@ class JSONScanner {
   /* user code: */
 	private StringBuffer string = new StringBuffer();
 	
-	private Variant mkVariantNumber() {
-		long v = Long.parseLong(yytext());
-		if ((v & 0xFFFFFFFF00000000L) == 0) {
-			return new VariantInt((int)v);
-		} else {
-			return new VariantLong(v);
-		}
-	}
-	
 	public boolean ready() throws IOException {
 		while (true) {
 			if ((zzCurrentPos + 1) < zzEndRead) {
@@ -671,7 +662,7 @@ class JSONScanner {
           }
         case 26: break;
         case 3: 
-          { return new JSONTocken(JSONTocken.TVARIANT, mkVariantNumber());
+          { return new JSONTocken(JSONTocken.TVARIANT, VariantNumber.optimize(Long.parseLong(yytext())));
           }
         case 27: break;
         case 4: 

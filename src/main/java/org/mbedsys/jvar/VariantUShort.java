@@ -18,21 +18,21 @@ package org.mbedsys.jvar;
 
 
 /**
- * Signed integer variant
+ * Unsigned short integer variant
  * 
  * @author <a href="mailto:emericv@mbedsys.org">Emeric Verschuur</a>
  * Copyright 2014 MbedSYS
  */
-public class VariantInt extends VariantNumber {
+public class VariantUShort extends VariantNumber {
 	
-	protected int data;
+	protected short data;
 
 	/**
-	 * Int variant constructor from a value
+	 * Unsigned short integer variant constructor from a value
 	 * 
 	 * @param value
 	 */
-	public VariantInt(int value) {
+	public VariantUShort(short value) {
 		data = value;
 	}
 
@@ -48,12 +48,12 @@ public class VariantInt extends VariantNumber {
 
 	@Override
 	public short shortValue() {
-		return (short) data;
+		return data;
 	}
 
 	@Override
 	public int intValue() {
-		return data;
+		return data & 0xFFFF;
 	}
 
 	/**
@@ -66,9 +66,24 @@ public class VariantInt extends VariantNumber {
 		return data & mask;
 	}
 
+	/**
+	 * Get the sub value
+	 * 
+	 * @param offset sub value bit offset
+	 * @param length sub value bit length
+	 * @return a short value
+	 */
+	public short shortValue(int offset, int length) {
+		int mask = 0;
+		for(int i=0; i < length; i++) {
+			mask |= 1 << (offset + i);
+		}
+		return (short) ((data & mask) >> offset);
+	}
+
 	@Override
 	public long longValue() {
-		return data;
+		return data & 0xFFFFFFFFL;
 	}
 
 	@Override
@@ -137,6 +152,6 @@ public class VariantInt extends VariantNumber {
 
 	@Override
 	public Type type() {
-		return Type.INT;
+		return Type.UINT;
 	}
 }

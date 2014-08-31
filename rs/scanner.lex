@@ -17,15 +17,6 @@ import java.io.IOException;
 %{
 	private StringBuffer string = new StringBuffer();
 	
-	private Variant mkVariantNumber() {
-		long v = Long.parseLong(yytext());
-		if ((v & 0xFFFFFFFF00000000L) == 0) {
-			return new VariantInt((int)v);
-		} else {
-			return new VariantLong(v);
-		}
-	}
-	
 	public boolean ready() throws IOException {
 		while (true) {
 			if ((zzCurrentPos + 1) < zzEndRead) {
@@ -110,7 +101,7 @@ escape_horiz_tab        = \\t
   {kw_nan}                 { return new JSONTocken(JSONTocken.TVARIANT, Variant.NULL); }
   {kw_infinity}            { return new JSONTocken(JSONTocken.TVARIANT, Variant.NULL); }
   
-  {number}                 { return new JSONTocken(JSONTocken.TVARIANT, mkVariantNumber()); }
+  {number}                 { return new JSONTocken(JSONTocken.TVARIANT, VariantNumber.optimize(Long.parseLong(yytext())); }
   {number_ext}             { return new JSONTocken(JSONTocken.TVARIANT, new VariantDouble(Double.parseDouble(yytext()))); }
   
   {square_bracket_open}    { return new JSONTocken(JSONTocken.TARRBEGIN); }

@@ -98,4 +98,9 @@ public class VariantByteArray extends Variant {
 	public boolean isNull() {
 		return data == null;
 	}
+
+	@Override
+	public Variant clone(int flags) {
+		return new VariantByteArray(data);
+	}
 }

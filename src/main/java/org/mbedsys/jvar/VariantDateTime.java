@@ -181,4 +181,9 @@ public class VariantDateTime extends Variant {
 	public Type type() {
 		return Type.DATETIME;
 	}
+
+	@Override
+	public Variant clone(int flags) {
+		return new VariantDateTime(data);
+	}
 }

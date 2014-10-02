@@ -154,4 +154,9 @@ public class VariantULong extends VariantNumber {
 	public Type type() {
 		return Type.ULONG;
 	}
+
+	@Override
+	public Variant clone(int flags) {
+		return new VariantULong(data);
+	}
 }

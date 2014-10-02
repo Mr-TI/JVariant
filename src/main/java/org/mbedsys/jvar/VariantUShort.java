@@ -154,4 +154,9 @@ public class VariantUShort extends VariantNumber {
 	public Type type() {
 		return Type.UINT;
 	}
+	
+	@Override
+	public Variant clone(int flags) {
+		return new VariantUShort(data);
+	}
 }

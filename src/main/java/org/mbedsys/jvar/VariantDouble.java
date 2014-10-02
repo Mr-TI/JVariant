@@ -118,4 +118,9 @@ public class VariantDouble extends VariantNumber {
 	public Type type() {
 		return Type.DOUBLE;
 	}
+
+	@Override
+	public Variant clone(int flags) {
+		return new VariantDouble(data);
+	}
 }

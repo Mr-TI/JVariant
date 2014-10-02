@@ -42,7 +42,7 @@ import java.util.Random;
 public abstract class Variant implements Comparable<Object> {
 
 	public enum Type {
-		BOOL, BYTE, BYTEARRAY, DATETIME, DOUBLE, SHORT, INT, LIST, LONG, MAP, NULL, STRING, USHORT, UINT, ULONG
+		VOID, ANY, BOOL, BYTE, BYTEARRAY, DATETIME, DOUBLE, SHORT, INT, LIST, LONG, MAP, NULL, STRING, USHORT, UINT, ULONG
 	}
 
 	public enum Format {
@@ -51,7 +51,20 @@ public abstract class Variant implements Comparable<Object> {
 
 	public static final Variant NULL = new VariantNull();
 
+	/**
+	 * Compact JSON format, without white spaces (flag used for serialization)
+	 */
 	public static int FORMAT_JSON_COMPACT = 0x00000020;
+
+	/**
+	 * Deep copy (flag used for clone method)
+	 */
+	public static int DEEP_COPY = 0x00000001;
+	
+	/**
+	 * Make unmodifiable variant (applicable to cloned maps and lists)
+	 */
+	public static int UNMODIFIABLE = 0x00000002;
 
 	public static Variant IUD_GENERATOR = new VariantString("") {
 		private final long MSB = 0x8000000000000000L;
@@ -374,6 +387,14 @@ public abstract class Variant implements Comparable<Object> {
 	 * @return the type as Type
 	 */
 	public abstract Type type();
+	
+	/**
+	 * Clone this variant (make a copy of)
+	 * 
+	 * @param flags 
+	 * @return the cloned variant
+	 */
+	public abstract Variant clone(int flags);
 
 	/**
 	 * Abstract parser

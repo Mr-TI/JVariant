@@ -224,4 +224,9 @@ public class VariantString extends Variant {
 		}
 		return ret;
 	}
+	
+	@Override
+	public Variant clone(int flags) {
+		return new VariantString(data);
+	}
 }

@@ -119,4 +119,9 @@ public class VariantNull extends VariantNumber {
 	public String toHexString() {
 		return "0";
 	}
+
+	@Override
+	public Variant clone(int flags) {
+		return new VariantNull();
+	}
 }

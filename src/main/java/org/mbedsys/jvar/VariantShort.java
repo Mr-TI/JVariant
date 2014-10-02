@@ -139,4 +139,9 @@ public class VariantShort extends VariantNumber {
 	public Type type() {
 		return Type.INT;
 	}
+	
+	@Override
+	public Variant clone(int flags) {
+		return new VariantShort(data);
+	}
 }

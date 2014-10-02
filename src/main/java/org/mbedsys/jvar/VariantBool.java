@@ -125,4 +125,9 @@ public class VariantBool extends VariantNumber {
     public Type type() {
         return Type.BOOL;
     }
+
+	@Override
+	public Variant clone(int flags) {
+		return new VariantBool(data);
+	}
 }

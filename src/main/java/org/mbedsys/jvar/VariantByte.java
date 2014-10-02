@@ -49,7 +49,7 @@ public class VariantByte extends VariantNumber {
 	 * Get the byte value using a binary mask
 	 * 
 	 * @param mask
-	 * @return
+	 * @return a byte value
 	 */
 	public byte byteValue(byte mask) {
 		return (byte) (data & mask);
@@ -62,7 +62,7 @@ public class VariantByte extends VariantNumber {
 	 *            sub value bit offset
 	 * @param length
 	 *            sub value bit length
-	 * @return
+	 * @return a byte value
 	 */
 	public byte byteValue(int offset, int length) {
 		byte mask = 0;
@@ -155,5 +155,10 @@ public class VariantByte extends VariantNumber {
 	@Override
 	public Type type() {
 		return Type.BYTE;
+	}
+
+	@Override
+	public Variant clone(int flags) {
+		return new VariantByte(data);
 	}
 }

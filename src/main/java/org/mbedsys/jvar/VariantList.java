@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -221,5 +222,22 @@ public class VariantList extends Variant implements List<Variant> {
 	@Override
 	public Type type() {
 		return Type.LIST;
+	}
+
+	@Override
+	public Variant clone(int flags) {
+		VariantList list;
+		if ((flags & DEEP_COPY) != 0) {
+			list = new VariantList();
+			for (Variant elt: data) {
+				list.add(elt.clone(flags));
+			}
+		} else {
+			list = new VariantList(data);
+		}
+		if ((flags & UNMODIFIABLE) != 0) {
+			list.data = Collections.unmodifiableList(list.data);
+		}
+		return list;
 	}
 }

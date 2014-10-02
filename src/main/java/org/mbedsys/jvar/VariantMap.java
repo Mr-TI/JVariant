@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -226,5 +227,22 @@ public class VariantMap extends Variant implements Map<String, Variant> {
 	@Override
 	public VariantList toList() {
 		return new VariantList(data.values());
+	}
+
+	@Override
+	public Variant clone(int flags) {
+		VariantMap list;
+		if ((flags & DEEP_COPY) != 0) {
+			list = new VariantMap();
+			for (Entry<String, Variant> elt: data.entrySet()) {
+				list.put(elt.getKey(), elt.getValue().clone(flags));
+			}
+		} else {
+			list = new VariantMap(data);
+		}
+		if ((flags & UNMODIFIABLE) != 0) {
+			list.data = Collections.unmodifiableMap(list.data);
+		}
+		return list;
 	}
 }

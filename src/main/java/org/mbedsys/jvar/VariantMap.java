@@ -51,7 +51,7 @@ public class VariantMap extends Variant implements Map<String, Variant> {
 		this.data = new HashMap<>(value);
 	}
 
-    private VariantMap() {
+	public VariantMap() {
     	this.data = new HashMap<>();
 	}
 
